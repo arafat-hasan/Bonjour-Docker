@@ -59,7 +59,7 @@ REPOSITORY    TAG       IMAGE ID       CREATED         SIZE
 redis         latest    19c51d4327cf   10 days ago     117MB
 hello-world   latest    feb5d9fea6a5   16 months ago   13.3kB
 ```
-Run command starts a container based on a image
+Run command starts a container based on a image. Run command is basically combination of `pull` and `start` command.
 
 ```
 arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> docker run redis
@@ -124,7 +124,7 @@ arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)>
 
 ```
 
-`docker run <image_name> will run multiple container from same images.
+`docker run <image_name>` will run multiple container from same images.
 `docker run <container_name>/<container_id>` will run already stopped container.
 
 ```
@@ -159,4 +159,58 @@ d7ec2faee334   redis         "docker-entrypoint.s…"   5 seconds ago       Up 4
 a0d9a783bc30   redis         "docker-entrypoint.s…"   About an hour ago   Exited (0) 52 seconds ago                                               focused_shirley
 edba7dea412c   hello-world   "/hello"                 2 hours ago         Exited (0) 2 hours ago                                                  exciting_fermi
 
+```
+
+
+Monitor logs with `log` command:
+
+```
+arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> docker ps 
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                       NAMES
+d7ec2faee334   redis     "docker-entrypoint.s…"   10 minutes ago   Up 10 minutes   0.0.0.0:6000->6379/tcp, :::6000->6379/tcp   dazzling_blackwell
+arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> docker logs dazzling_blackwell 
+1:C 28 Jan 2023 14:14:17.882 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+1:C 28 Jan 2023 14:14:17.882 # Redis version=7.0.8, bits=64, commit=00000000, modified=0, pid=1, just started
+1:C 28 Jan 2023 14:14:17.882 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+1:M 28 Jan 2023 14:14:17.882 * monotonic clock: POSIX clock_gettime
+1:M 28 Jan 2023 14:14:17.883 * Running mode=standalone, port=6379.
+1:M 28 Jan 2023 14:14:17.883 # Server initialized
+1:M 28 Jan 2023 14:14:17.883 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+1:M 28 Jan 2023 14:14:17.883 * Ready to accept connections
+arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> docker logs -f dazzling_blackwell
+1:C 28 Jan 2023 14:14:17.882 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+1:C 28 Jan 2023 14:14:17.882 # Redis version=7.0.8, bits=64, commit=00000000, modified=0, pid=1, just started
+1:C 28 Jan 2023 14:14:17.882 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+1:M 28 Jan 2023 14:14:17.882 * monotonic clock: POSIX clock_gettime
+1:M 28 Jan 2023 14:14:17.883 * Running mode=standalone, port=6379.
+1:M 28 Jan 2023 14:14:17.883 # Server initialized
+1:M 28 Jan 2023 14:14:17.883 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+1:M 28 Jan 2023 14:14:17.883 * Ready to accept connections
+^C⏎                                                                                                                                                                                                                arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop) [SIGINT]> 
+```
+
+
+interactive terminal mode
+```
+arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> docker exec -it dazzling_blackwell /bin/bash
+root@d7ec2faee334:/data# whoami
+root
+root@d7ec2faee334:/data# pwd
+/data
+root@d7ec2faee334:/data# ls
+root@d7ec2faee334:/data# env
+HOSTNAME=d7ec2faee334
+REDIS_DOWNLOAD_SHA=06a339e491306783dcf55b97f15a5dbcbdc01ccbde6dc23027c475cab735e914
+PWD=/data
+HOME=/root
+REDIS_VERSION=7.0.8
+GOSU_VERSION=1.14
+TERM=xterm
+REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-7.0.8.tar.gz
+SHLVL=1
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/env
+root@d7ec2faee334:/data# exit
+exit
+arafat_hasan@arafat-dsi ~/W/p/B/DockerWithNana (develop)> 
 ```
