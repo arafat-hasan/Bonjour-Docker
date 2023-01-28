@@ -214,3 +214,109 @@ root@d7ec2faee334:/data# exit
 exit
 [~]# 
 ```
+
+Network, a network named 'mongo-network' is created.
+```
+
+[~]# docker network ls
+NETWORK ID     NAME         DRIVER    SCOPE
+4791102ea737   bridge       bridge    local
+6c7a9eb178e2   envize_net   bridge    local
+75ba4091f70d   host         host      local
+dcb53e65d7c2   none         null      local
+[~]# docker network rm envize_net 
+envize_net
+[~]# docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+4791102ea737   bridge    bridge    local
+75ba4091f70d   host      host      local
+dcb53e65d7c2   none      null      local
+[~]# docker network create mongo-network
+4ab8774504e758081da2590b8826851dd6108c0b68084424a8d695bbe1c443df
+[~]# docker network ls
+NETWORK ID     NAME            DRIVER    SCOPE
+4791102ea737   bridge          bridge    local
+75ba4091f70d   host            host      local
+4ab8774504e7   mongo-network   bridge    local
+dcb53e65d7c2   none            null      local
+```
+
+Run mongo and mongo express with a custom network named 'mongo-network'
+
+```
+[~]# docker pull mongo 
+Using default tag: latest
+latest: Pulling from library/mongo
+846c0b181fff: Pull complete 
+ef773e84b43a: Pull complete 
+2bfad1efb664: Pull complete 
+84e59a6d63c9: Pull complete 
+d2f00ac700e0: Pull complete 
+96d33bf42f45: Pull complete 
+ebaa69d77b61: Pull complete 
+f4af9408cbac: Pull complete 
+70f9fc9ff713: Pull complete 
+Digest: sha256:5b3815ec21a1dfd9f216ee83b324a0a779e1dfd17892e2f858e3c571f5980561
+Status: Downloaded newer image for mongo:latest
+docker.io/library/mongo:latest
+
+```
+
+```
+[~]# docker run -d --net mongo-network --name mongodb \
+                               -p 27017:27017 \
+                               -e MONGO_INITDB_ROOT_USERNAME=admin \
+                               -e MONGO_INITDB_ROOT_PASSWORD=password \
+                               mongo
+b86d7b1266ff098ba3e1783e9a03862d89268d48f658b0961959b236b08b2838
+[~]# docker logs mongodb
+about to fork child process, waiting until server is ready for connections.
+forked process: 27
+
+{"t":{"$date":"2023-01-28T17:08:50.725+00:00"},"s":"I",  "c":"CONTROL",  "id":20698,   "ctx":"-","msg":"***** SERVER RESTARTED *****"}
+{"t":{"$date":"2023-01-28T17:08:50.726+00:00"},"s":"I",  "c":"NETWORK",  "id":4915701, "ctx":"-","msg":"Initialized wire specification","attr":{"spec":{"incomingExternalClient":{"minWireVersion":0,"maxWireVersion":17},"incomingInternalClient":{"minWireVersion":0,"maxWireVersion":17},"outgoing":{"minWireVersion":6,"maxWireVersion":17},"isInternalClient":true}}}
+{"t":{"$date":"2023-01-28T17:08:50.729+00:00"},"s":"I",  "c":"CONTROL",  "id":23285,   "ctx":"main","msg":"Automatically disabling TLS 1.0, to force-enable TLS 1.0 specify --sslDisabledProtocols 'none'"}
+{"t":{"$date":"2023-01-28T17:08:50.730+00:00"},"s":"I",  "c":"NETWORK",  "id":4648601, "ctx":"main","msg":"Implicit TCP FastOpen unavailable. If TCP FastOpen is required, set tcpFastOpenServer, tcpFastOpenClient, and tcpFastOpenQueueSize."}
+
+```
+
+
+Now start mongo express with the same network
+```
+[~]# docker run -d \
+                                     -p 8081:8081 \
+                                     -e ME_CONFIG_MONGODB_ADMINUSERNAME=admin \
+                                     -e ME_CONFIG_MONGODB_ADMINPASSWORD=password \
+                                     --net mongo-network \
+                                     --name mongo-express \
+                                     -e ME_CONFIG_MONGODB_SERVER=mongodb \
+                                     mongo-express
+Unable to find image 'mongo-express:latest' locally
+latest: Pulling from library/mongo-express
+6a428f9f83b0: Pull complete
+f2b1fb32259e: Pull complete
+40888f2a0a1f: Pull complete
+4e3cc9ce09be: Pull complete
+eaa1898f3899: Pull complete
+ab4078090382: Pull complete
+ae780a42c79e: Pull complete
+e60224d64a04: Pull complete
+Digest: sha256:dcfcf89bf91238ff129469a5a94523b3025913dcc41597d72d4d5f4a0339cc7d
+Status: Downloaded newer image for mongo-express:latest
+6592c8324561458a8f58bd5f8b1747d72c637b9e97c27906194987bea940dd8e
+[~]# docker ps
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS          PORTS                                           NAMES
+6592c8324561   mongo-express   "tini -- /docker-ent…"   7 minutes ago    Up 7 minutes    0.0.0.0:8081->8081/tcp, :::8081->8081/tcp       mongo-express
+b86d7b1266ff   mongo           "docker-entrypoint.s…"   26 minutes ago   Up 26 minutes   0.0.0.0:27017->27017/tcp, :::27017->27017/tcp   mongodb
+[~]# docker logs mongo-express
+Welcome to mongo-express
+------------------------
+
+
+(node:6) [MONGODB DRIVER] Warning: Current Server Discovery and Monitoring engine is deprecated, and will be removed in a future version. To use the new Server Discover and Monitoring engine, pass option { useUnifiedTopology: true } to the MongoClient constructor.
+Mongo Express server listening at http://0.0.0.0:8081
+Server is open to allow connections from anyone (0.0.0.0)
+basicAuth credentials are "admin:pass", it is recommended you change this in your config.js!
+[~]#
+
+```
